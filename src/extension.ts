@@ -1,26 +1,57 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
+/* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
+import { Configuration, OpenAIApi } from "openai";
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
 	console.log('Congratulations, your extension "dev-buddy-openai" is now active!');
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	let disposable = vscode.commands.registerCommand('dev-buddy-openai.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from dev-buddy-openai!');
+	const openaiApiKey = process.env.OPENAI_API_KEY;
+	if (!openaiApiKey) {
+		vscode.window.showErrorMessage('The OPENAI_API_KEY environment variable is not set');
+		return;
+	}
+	const configuration = new Configuration({ apiKey: openaiApiKey });
+	const openai = new OpenAIApi(configuration);
+
+	let disposable = vscode.commands.registerCommand('dev-buddy-openai.completeComments', async () => {
+		const editor = vscode.window.activeTextEditor;
+		if (!editor) {
+			return;
+		}
+
+		const languageId = editor.document.languageId;
+		const selection = editor.selection;
+		const selectedText = editor.document.getText(selection);
+		const requestText = [
+			'Replace all the "TODO" and "FIXME" comments from the following code',
+			'for the code that actually does what the comment expects',
+			'and remove the entire comment after the "TODO" or "FIXME":',
+			'```' + languageId,
+			selectedText,
+			'```'
+		].join("\n");
+
+		try {
+			const completion = (await openai.createCompletion({
+				model: "text-davinci-003",
+				prompt: requestText,
+				temperature: 0.7,
+				max_tokens: 256,
+				top_p: 1,
+				frequency_penalty: 0,
+				presence_penalty: 0,
+			})).data;
+			const newText = completion.choices[0].text?.trim() || selectedText;
+
+			editor.edit(editBuilder => {
+				editBuilder.replace(selection, newText);
+			});
+		} catch (error: any) {
+			vscode.window.showErrorMessage(`An error occurred while completing the code: ${error.message}`);
+		}
 	});
 
 	context.subscriptions.push(disposable);
 }
 
-// This method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() { }

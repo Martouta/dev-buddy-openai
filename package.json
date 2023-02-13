@@ -1,7 +1,7 @@
 {
   "name": "dev-buddy-openai",
-  "displayName": "dev-buddy-openai",
-  "description": "Dev Buddy OpenAI integrates with the OpenAI API to help developers write code faster by completing code comments like TODO: and FIXME:.",
+  "displayName": "Dev-Buddy-OpenAI",
+  "description": "Dev Buddy OpenAI integrates with the OpenAI API to help developers write code faster by completing code comments like `TODO:` and `FIXME:`.",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.75.0"
@@ -9,15 +9,16 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [
-    "onCommand:dev-buddy-openai.helloWorld"
-  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/martouta/dev-buddy-openai.git"
+  },
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "dev-buddy-openai.helloWorld",
-        "title": "Hello World"
+        "command": "dev-buddy-openai.completeComments",
+        "title": "Dev Buddy OpenAI -> Complete Comments"
       }
     ]
   },
@@ -27,19 +28,23 @@
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
-    "test": "node ./out/test/runTest.js"
+    "test": "echo \"No tests available.\""
   },
   "devDependencies": {
-    "@types/vscode": "^1.75.0",
     "@types/glob": "^8.0.1",
     "@types/mocha": "^10.0.1",
     "@types/node": "16.x",
+    "@types/vscode": "^1.75.0",
     "@typescript-eslint/eslint-plugin": "^5.49.0",
     "@typescript-eslint/parser": "^5.49.0",
+    "@vscode/test-electron": "^2.2.2",
     "eslint": "^8.33.0",
     "glob": "^8.1.0",
+    "jest": "^29.4.2",
     "mocha": "^10.1.0",
-    "typescript": "^4.9.4",
-    "@vscode/test-electron": "^2.2.2"
+    "typescript": "^4.9.4"
+  },
+  "dependencies": {
+    "openai": "^3.1.0"
   }
 }

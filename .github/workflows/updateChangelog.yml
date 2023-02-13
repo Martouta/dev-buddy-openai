@@ -26,11 +26,11 @@ jobs:
           git commit -am "Update changelog"
 
       - name: Create pull request
-        if: ${{ !contains(github.event.pull_request.labels.*.name, 'gh-workflow-bot') }}
+        if: ${{ !contains(github.event.pull_request.labels.*.name, 'gh-workflow-bot') }}
         uses: peter-evans/create-pull-request@v4
         with:
           title: "Update CHANGELOG"
           body: |
             This pull request updates the CHANGELOG.md file with the changes from the recently merged pull request.
-          branch: ${{ "changelog-update-" + format("%Y-%m-%d-%H-%M-%S", "now") }}
+          branch: changelog-update-$(date +%Y-%m-%d-%H-%M-%S)
           labels: gh-workflow-bot

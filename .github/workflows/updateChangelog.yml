@@ -18,15 +18,13 @@ jobs:
           echo "## $(date +%Y-%m-%d)" >> CHANGELOG.md
           echo "- $(github.event.pull_request.title)" >> CHANGELOG.md
 
-      - name: Commit and push changes
+      - name: Create commit
         if: contains(github.event.pull_request.labels.*.name, 'gh-workflow-bot')
-        uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          commit_message: "Update CHANGELOG"
+        run: git commit -am "Update changelog"
 
       - name: Create pull request
         if: contains(github.event.pull_request.labels.*.name, 'gh-workflow-bot')
-        uses: peter-evans/create-pull-request@v2
+        uses: peter-evans/create-pull-request@v4
         with:
           title: "Update CHANGELOG"
           body: |

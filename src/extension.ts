@@ -31,8 +31,6 @@ export function activate(context: vscode.ExtensionContext) {
 			'```'
 		].join("\n");
 
-		console.log(requestText);
-
 		try {
 			const completion = (await openai.createCompletion({
 				model: "text-davinci-003",
@@ -43,7 +41,6 @@ export function activate(context: vscode.ExtensionContext) {
 				frequency_penalty: 0,
 				presence_penalty: 0,
 			})).data;
-			console.log(completion);
 			const newText = completion.choices[0].text?.trim() || selectedText;
 
 			editor.edit(editBuilder => {

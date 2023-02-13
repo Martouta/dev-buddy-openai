@@ -20,7 +20,10 @@ jobs:
 
       - name: Create commit
         if: ${{ !contains(github.event.pull_request.labels.*.name, 'gh-workflow-bot') }}
-        run: git commit -am "Update changelog"
+        run: |
+          git config user.name 'Marta Noya'
+          git config user.email 'martouta@users.noreply.github.com'
+          git commit -am "Update changelog"
 
       - name: Create pull request
         if: ${{ !contains(github.event.pull_request.labels.*.name, 'gh-workflow-bot') }}

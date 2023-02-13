@@ -18,18 +18,19 @@ jobs:
           echo "## $(date +%Y-%m-%d)" >> CHANGELOG.md
           echo "- $(github.event.pull_request.title)" >> CHANGELOG.md
 
-      - name: Create commit
-        if: ${{ !contains(github.event.pull_request.labels.*.name, 'gh-workflow-bot') }}
+      - name: Configure git
         run: |
           git config user.name 'Marta Noya'
           git config user.email 'martouta@users.noreply.github.com'
-          git commit -am "Update changelog"
 
       - name: Create pull request
-        if: ${{ !contains(github.event.pull_request.labels.*.name, 'gh-workflow-bot') }}
+        if: ${{ !contains(github.event.pull_request.labels.*.name, 'gh-workflow-bot') }}
         uses: peter-evans/create-pull-request@v4
         with:
+          commit-message: Update changelog
+          token: ${{ secrets.GITHUB_TOKEN }}
           title: "Update CHANGELOG"
+          base: main
           body: |
             This pull request updates the CHANGELOG.md file with the changes from the recently merged pull request.
           labels: gh-workflow-bot

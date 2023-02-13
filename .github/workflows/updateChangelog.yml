@@ -13,23 +13,23 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Update CHANGELOG
-        if: ${{ !github.event.pull_request.title.startsWith("[gh-workflow-bot]") }}
+        if: contains(github.event.pull_request.labels.*.name, 'gh-workflow-bot')
         run: |
           echo "## $(date +%Y-%m-%d)" >> CHANGELOG.md
           echo "- $(github.event.pull_request.title)" >> CHANGELOG.md
 
       - name: Commit and push changes
-        if: ${{ !github.event.pull_request.title.startsWith("[gh-workflow-bot]") }}
+        if: contains(github.event.pull_request.labels.*.name, 'gh-workflow-bot')
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: "[gh-workflow-bot] Update CHANGELOG"
+          commit_message: "Update CHANGELOG"
 
       - name: Create pull request
-        if: ${{ !github.event.pull_request.title.startsWith("[gh-workflow-bot]") }}
+        if: contains(github.event.pull_request.labels.*.name, 'gh-workflow-bot')
         uses: peter-evans/create-pull-request@v2
         with:
-          title: "[gh-workflow-bot] Update CHANGELOG"
+          title: "Update CHANGELOG"
           body: |
             This pull request updates the CHANGELOG.md file with the changes from the recently merged pull request.
           branch: changelog-update-$(date +'%Y-%m-%d-%H-%M-%S')
-          labels: changelog
+          labels: gh-workflow-bot

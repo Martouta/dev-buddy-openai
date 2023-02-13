@@ -6,4 +6,9 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+## [0.0.1] - 2023-02-13
+### Added
+- Complete the code in 'TODO' and 'FIXME' with OpenAI's API
+
+## [Initial Release]
 - Initial release

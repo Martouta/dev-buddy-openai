@@ -2,6 +2,7 @@
   "name": "dev-buddy-openai",
   "displayName": "Dev-Buddy-OpenAI",
   "description": "Dev Buddy OpenAI integrates with the OpenAI API to help developers write code faster by completing code comments like `TODO:` and `FIXME:`.",
+  "publisher": "martouta",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.75.0"

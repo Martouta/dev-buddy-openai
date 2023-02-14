@@ -17,15 +17,15 @@ export class DevBuddy {
 		return new OpenAIApi(configuration);
 	}
 
-	async completeComments(selectedText: string, languageId: string, functionSuccess: (newText: string) => void, functionFailure: (errorMessage: string) => void) {
+	async completeComments(selectedText: string, languageId: string) {
 		try {
 			const requestBody = DevBuddy.requestBody(selectedText, languageId);
 			const completion = (await this.openai.createCompletion(requestBody)).data;
 			const newText = completion.choices[0].text?.trim() || selectedText;
 
-			functionSuccess(newText);
+			return newText;
 		} catch (error: any) {
-			functionFailure(error.message);
+			throw new Error(error.message);
 		}
 	}
 

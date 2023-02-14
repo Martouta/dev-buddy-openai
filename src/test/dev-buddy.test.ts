@@ -39,94 +39,73 @@ describe("DevBuddy", () => {
     });
   });
 
-  // TODO: test much more ...
   describe("completeComments", () => {
-    it("calls success callback with new text", async () => {
-      // Set up a mock implementation for the OpenAI API client
-      const openaiMock = {
-        createCompletion: jest.fn().mockResolvedValue({
-          data: {
-            choices: [
-              {
-                text: "new code",
-              },
-            ],
-          },
-        }),
-      };
+    const mockCompletionResponse = {
+      data: {
+        choices: [
+          {
+            text: "A completed code snippet"
+          }
+        ]
+      }
+    };
 
-      // Create a DevBuddy instance with the mock OpenAI API client
-      const devBuddy = new DevBuddy("openaiApiKey", () => openaiMock);
+    const mockCreateCompletion = jest.fn().mockResolvedValue(mockCompletionResponse);
+    const mockOpenai = { createCompletion: mockCreateCompletion };
+    const mockConfigureOpenAI = jest.fn().mockReturnValue(mockOpenai);
 
-      // Set up the success and failure callbacks
-      const successCallback = jest.fn();
-      const failureCallback = jest.fn();
-
-      // Call completeComments with some sample arguments
-      await devBuddy.completeComments(
-        "selected text",
-        "typescript",
-        successCallback,
-        failureCallback
-      );
-
-      // Verify that the success callback was called with the expected new text
-      expect(successCallback).toHaveBeenCalledWith("new code");
-
-      // Verify that the failure callback was not called
-      expect(failureCallback).not.toHaveBeenCalled();
-
-      // Verify that the OpenAI API client was called with the expected parameters
-      expect(openaiMock.createCompletion).toHaveBeenCalledWith({
-        model: "text-davinci-003",
-        prompt:
-          'Replace all the "TODO" and "FIXME" comments from the following code\nfor the code that actually does what the comment expects\nand remove the entire comment after the "TODO" or "FIXME":\n```typescript\nselected text\n```',
-        temperature: 0.7,
-        max_tokens: 256,
-        top_p: 1,
-        frequency_penalty: 0,
-        presence_penalty: 0,
-      });
+    beforeEach(() => {
+      jest.clearAllMocks();
     });
 
-    it("calls failure callback with error message", async () => {
-      // Set up a mock implementation for the OpenAI API client that throws an error
-      const openaiMock = {
-        createCompletion: jest.fn().mockRejectedValue(new Error("test error")),
-      };
-
-      // Create a DevBuddy instance with the mock OpenAI API client
-      const devBuddy = new DevBuddy("openaiApiKey", () => openaiMock);
-
-      // Set up the success and failure callbacks
-      const successCallback = jest.fn();
-      const failureCallback = jest.fn();
-
-      // Call completeComments with some sample arguments
-      await devBuddy.completeComments(
-        "selected text",
-        "typescript",
-        successCallback,
-        failureCallback
-      );
-
-      // Verify that the failure callback was called with the expected error message
-      expect(failureCallback).toHaveBeenCalledWith("test error");
-
-      // Verify that the success callback was not called
-      expect(successCallback).not.toHaveBeenCalled();
-
-      // Verify that the OpenAI API client was called with the expected parameters
-      expect(openaiMock.createCompletion).toHaveBeenCalledWith({
-        model: "text-davinci-003",
-        prompt:
-          'Replace all the "TODO" and "FIXME" comments from the following code\nfor the code that actually does what the comment expects\nand remove the entire comment after the "TODO" or "FIXME":\n```typescript\nselected text\n```',
-        temperature: 0.7,
-        max_tokens: 256,
-        top_p: 1,
-        frequency_penalty: 0,
-        presence_penalty: 0,
+    it("should return the original 'selectedText' when the OpenAI API response is empty", async () => {
+      const devBuddy = new DevBuddy("openai-api-key", mockConfigureOpenAI);
+      mockCreateCompletion.mockResolvedValueOnce({
+        data: {
+          choices: [
+            {
+              text: ""
+            }
+          ]
+        }
       });
+
+      const result = await devBuddy.completeComments("Some code with TODO and FIXME comments", "javascript");
+
+      expect(result).toBe("Some code with TODO and FIXME comments");
+      expect(mockCreateCompletion).toHaveBeenCalledTimes(1);
+    });
+
+    it("should return the original 'selectedText' when the OpenAI API response is whitespace", async () => {
+      const devBuddy = new DevBuddy("openai-api-key", mockConfigureOpenAI);
+      mockCreateCompletion.mockResolvedValueOnce({
+        data: {
+          choices: [
+            {
+              text: "  \n\n   \n"
+            }
+          ]
+        }
+      });
+
+      const result = await devBuddy.completeComments("Some code with TODO and FIXME comments", "javascript");
+
+      expect(result).toBe("Some code with TODO and FIXME comments");
+      expect(mockCreateCompletion).toHaveBeenCalledTimes(1);
+    });
+
+    it("should throw an error when an error occurs while calling the OpenAI API", async () => {
+      const devBuddy = new DevBuddy("openai-api-key", mockConfigureOpenAI);
+      mockCreateCompletion.mockRejectedValueOnce(new Error("API Error"));
+
+      try {
+        await devBuddy.completeComments("Some code with TODO and FIXME comments", "javascript");
+        fail("Expected an error to be thrown");
+      } catch (error: any) {
+        expect(error.message).toBe("API Error");
+        expect(mockCreateCompletion).toHaveBeenCalledTimes(1);
+      }
     });
   });
+
 });

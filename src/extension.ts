@@ -21,16 +21,15 @@ export function activate(context: vscode.ExtensionContext) {
 		const selection = editor.selection;
 		const selectedText = editor.document.getText(selection);
 
-		const functionSuccess = (newText: string) => {
-			editor.edit(editBuilder => {
-				editBuilder.replace(selection, newText);
+		devBuddy.completeComments(selectedText, languageId)
+			.then((newText: string) => {
+				editor.edit(editBuilder => {
+					editBuilder.replace(selection, newText);
+				});
+			})
+			.catch((errorMessage: string) => {
+				vscode.window.showErrorMessage(`An error occurred while completing the code: ${errorMessage}`);
 			});
-		};
-		const functionFailure = (errorMessage: string) => {
-			vscode.window.showErrorMessage(`An error occurred while completing the code: ${errorMessage}`);
-		};
-
-		devBuddy.completeComments(selectedText, languageId, functionSuccess, functionFailure);
 	});
 
 	context.subscriptions.push(disposable);

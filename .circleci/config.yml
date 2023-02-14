@@ -4,7 +4,7 @@ jobs:
   dev-buddy-job:
     resource_class: small
     docker:
-      - image: cimg/node:16.19
+      - image: cimg/node:18.14
 
     steps:
       - checkout

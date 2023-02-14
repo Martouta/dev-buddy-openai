@@ -19,7 +19,7 @@ export class DevBuddy {
 
 	async completeComments(selectedText: string, languageId: string, functionSuccess: (newText: string) => void, functionFailure: (errorMessage: string) => void) {
 		try {
-			const requestBody = DevBuddy.requestBody(selectedText, languageId)
+			const requestBody = DevBuddy.requestBody(selectedText, languageId);
 			const completion = (await this.openai.createCompletion(requestBody)).data;
 			const newText = completion.choices[0].text?.trim() || selectedText;
 

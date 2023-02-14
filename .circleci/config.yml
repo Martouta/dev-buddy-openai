@@ -1,0 +1,18 @@
+version: 2.1
+
+jobs:
+  dev-buddy-job:
+    resource_class: small
+    docker:
+      - image: cimg/node:16.19
+
+    steps:
+      - checkout
+      - run: npm install
+      - run: npm test
+
+workflows:
+  dev-buddy-workflow:
+    jobs:
+      - dev-buddy-job
+

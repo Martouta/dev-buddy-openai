@@ -18,6 +18,18 @@ export class DevBuddy {
 	}
 
 	async completeComments(selectedText: string, languageId: string, functionSuccess: (newText: string) => void, functionFailure: (errorMessage: string) => void) {
+		try {
+			const requestBody = DevBuddy.requestBody(selectedText, languageId)
+			const completion = (await this.openai.createCompletion(requestBody)).data;
+			const newText = completion.choices[0].text?.trim() || selectedText;
+
+			functionSuccess(newText);
+		} catch (error: any) {
+			functionFailure(error.message);
+		}
+	}
+
+	static requestBody(selectedText: string, languageId: string) {
 		const requestText = [
 			'Replace all the "TODO" and "FIXME" comments from the following code',
 			'for the code that actually does what the comment expects',
@@ -27,21 +39,14 @@ export class DevBuddy {
 			'```'
 		].join("\n");
 
-		try {
-			const completion = (await this.openai.createCompletion({
-				model: "text-davinci-003",
-				prompt: requestText,
-				temperature: 0.7,
-				max_tokens: 256,
-				top_p: 1,
-				frequency_penalty: 0,
-				presence_penalty: 0,
-			})).data;
-			const newText = completion.choices[0].text?.trim() || selectedText;
-
-			functionSuccess(newText);
-		} catch (error: any) {
-			functionFailure(error.message);
-		}
+		return {
+			model: "text-davinci-003",
+			prompt: requestText,
+			temperature: 0.7,
+			max_tokens: 256,
+			top_p: 1,
+			frequency_penalty: 0,
+			presence_penalty: 0,
+		};
 	}
 }

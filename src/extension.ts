@@ -11,7 +11,7 @@ export function activate(context: vscode.ExtensionContext) {
 	}
 	const devBuddy = new DevBuddy(openaiApiKey);
 
-	let disposable = vscode.commands.registerCommand('dev-buddy-openai.completeComments', async () => {
+	const completeCommentsCommand = async () => {
 		const editor = vscode.window.activeTextEditor;
 		if (!editor) {
 			return;
@@ -30,7 +30,9 @@ export function activate(context: vscode.ExtensionContext) {
 			.catch((errorMessage: string) => {
 				vscode.window.showErrorMessage(`An error occurred while completing the code: ${errorMessage}`);
 			});
-	});
+	};
+
+	let disposable = vscode.commands.registerCommand('dev-buddy-openai.completeComments', completeCommentsCommand);
 
 	context.subscriptions.push(disposable);
 }

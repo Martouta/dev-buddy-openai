@@ -1,18 +1,21 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { Configuration, OpenAIApi } from "openai";
 
+interface OpenAIConfigureFunction {
+	createCompletion(prompt: Record<string, any>): Promise<any>;
+}
+
 export class DevBuddy {
-	public openai: OpenAIApi;
+	public openai: OpenAIConfigureFunction;
 
-	// # TODO: instead of any, it should be either OpenAIApi or ideally an interface that responds to createCompletion
-	constructor(openaiApiKey: string, configureFunction?: (openaiApiKey: string) => any) {
-        this.openai = configureFunction ? configureFunction(openaiApiKey) : DevBuddy.configureOpenAI(openaiApiKey);
-    }
+	constructor(openaiApiKey: string, configureFunction?: (openaiApiKey: string) => OpenAIConfigureFunction) {
+		this.openai = configureFunction ? configureFunction(openaiApiKey) : DevBuddy.configureOpenAI(openaiApiKey);
+	}
 
-    static configureOpenAI(openaiApiKey: string): OpenAIApi {
-        const configuration = new Configuration({ apiKey: openaiApiKey });
-        return new OpenAIApi(configuration);
-    }
+	static configureOpenAI(openaiApiKey: string): OpenAIApi {
+		const configuration = new Configuration({ apiKey: openaiApiKey });
+		return new OpenAIApi(configuration);
+	}
 
 	async completeComments(selectedText: string, languageId: string, functionSuccess: (newText: string) => void, functionFailure: (errorMessage: string) => void) {
 		const requestText = [

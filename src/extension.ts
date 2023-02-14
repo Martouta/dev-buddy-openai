@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { DevBuddy } from './dev-buddy';
 
 export function activate(context: vscode.ExtensionContext) {
-	console.log('Congratulations, your extension "dev-buddy-openai" is now active!');
+	console.log('Congrats, your extension "dev-buddy-openai" is now active! 🎉');
 
 	const openaiApiKey = process.env.OPENAI_API_KEY;
 	if (!openaiApiKey) {
@@ -26,6 +26,8 @@ function createCommandCompleteComments(devBuddy: DevBuddy): () => void {
 		const languageId = editor.document.languageId;
 		const selection = editor.selection;
 		const selectedText = editor.document.getText(selection);
+
+		console.log('completeComments requested');
 
 		devBuddy.completeComments(selectedText, languageId)
 			.then((newText: string) => {

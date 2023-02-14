@@ -9,9 +9,15 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.window.showErrorMessage('The OPENAI_API_KEY environment variable is not set');
 		return;
 	}
-	const devBuddy = new DevBuddy(openaiApiKey);
 
-	const completeCommentsCommand = async () => {
+	const devBuddy = new DevBuddy(openaiApiKey);
+	const completeCommentsCommand = createCommandCompleteComments(devBuddy);
+	let disposable = vscode.commands.registerCommand('dev-buddy-openai.completeComments', completeCommentsCommand);
+	context.subscriptions.push(disposable);
+}
+
+function createCommandCompleteComments(devBuddy: DevBuddy): () => void {
+	return async () => {
 		const editor = vscode.window.activeTextEditor;
 		if (!editor) {
 			return;
@@ -31,10 +37,6 @@ export function activate(context: vscode.ExtensionContext) {
 				vscode.window.showErrorMessage(`An error occurred while completing the code: ${errorMessage}`);
 			});
 	};
-
-	let disposable = vscode.commands.registerCommand('dev-buddy-openai.completeComments', completeCommentsCommand);
-
-	context.subscriptions.push(disposable);
 }
 
 export function deactivate() { }

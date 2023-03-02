@@ -3,98 +3,121 @@ import { DevBuddy } from "../dev-buddy";
 import { OpenAIApi } from "openai";
 
 describe("DevBuddy", () => {
-  describe("configureOpenAI", () => {
+  describe(".configureOpenAI", () => {
     it("returns an instance of OpenAIApi", () => {
       const openai = DevBuddy.configureOpenAI('example-api-key');
       expect(openai).toBeInstanceOf(OpenAIApi);
     });
   });
 
-  describe("requestBody", () => {
-    it("returns an object with the expected properties", () => {
-      const selectedText = "lambda { |num| num * 2 }";
-      const languageId = "ruby";
-      const requestBody = DevBuddy.requestBody(selectedText, languageId);
+  describe(".newText", () => {
+    it("should return the response text when it does not start with '```' or end with '```' or '```\n'", () => {
+      const completion = { data: { choices: [{ message: { content: "some completed text" } }] } };
 
-      expect(requestBody).toHaveProperty("model");
-      expect(requestBody).toHaveProperty("prompt");
-      expect(requestBody).toHaveProperty("temperature");
-      expect(requestBody).toHaveProperty("max_tokens");
-      expect(requestBody).toHaveProperty("top_p");
-      expect(requestBody).toHaveProperty("frequency_penalty");
-      expect(requestBody).toHaveProperty("presence_penalty");
+      const newText = DevBuddy.newText(completion);
 
-      expect(requestBody.model).toEqual("text-davinci-003");
+      expect(newText).toBe("some completed text");
+    });
 
-      const expectedPrompt = [
-        'Replace all the "TODO" and "FIXME" comments from the following code',
-        'for the code that actually does what the comment expects',
-        'and remove the entire comment after the "TODO" or "FIXME":',
-        '```ruby',
-        selectedText,
-        '```'
-      ].join("\n");
+    it("returns the substring with the code when the response text starts with '```' and ends with '```'", () => {
+      const completion = { data: { choices: [{ message: { content: "```ruby\ndef example\nend\n```" } }] } };
+      const expectedNewText = "def example\nend";
 
-      expect(requestBody.prompt).toEqual(expectedPrompt);
+      const newText = DevBuddy.newText(completion);
+
+      expect(newText).toBe(expectedNewText);
+    });
+
+    it("returns the substringwith the code when the response text starts with '```' and ends with '```\n'", () => {
+      const completion = { data: { choices: [{ message: { content: "```ruby\ndef example\nend\n```\n" } }] } };
+      const expectedNewText = "def example\nend";
+
+      const newText = DevBuddy.newText(completion);
+
+      expect(newText).toBe(expectedNewText);
+    });
+
+    it("returns the response with trim", () => {
+      const completion = { data: { choices: [{ message: { content: "\n\n\n   example    \n\t  \n" } }] } };
+      const expectedNewText = "example";
+
+      const newText = DevBuddy.newText(completion);
+
+      expect(newText).toBe(expectedNewText);
     });
   });
 
-  describe("completeComments", () => {
+  describe('.requestTextWithLanguageId', function () {
+    it('returns the text to be sent to the server for the code snippet', () => {
+      let selectedText = "lambda { |num| num * 2 }";
+      let languageId = "ruby";
+      expect(DevBuddy.requestTextWithLanguageId(selectedText, languageId)).toEqual(`\`\`\`${languageId}\n${selectedText}\n\`\`\``);
+    });
+  });
+
+  describe(".requestBody", () => {
+    it("returns an object with the expected properties", () => {
+      const requestText = "```ruby\nlambda { |num| num * 2 }\n```";
+      const requestBody = DevBuddy.requestBody(requestText);
+
+      expect(requestBody).toHaveProperty("model");
+      expect(requestBody).toHaveProperty("messages");
+
+      expect(requestBody.model).toEqual("gpt-3.5-turbo");
+
+      const expectedMessages = [
+        {
+          role: "system", content: [
+            "You receive code and respond with the same code",
+            "replacing all the 'TODO' and 'FIXME' comments",
+            "for the code that actually does what the comment expects.",
+            "The comments should also be removed after the 'TODO' or 'FIXME'."
+          ].join(" ")
+        },
+        { role: "user", content: requestText }
+      ];
+
+      expect(requestBody.messages).toEqual(expectedMessages);
+    });
+  });
+
+  describe("#completeComments", () => {
     const mockCompletionResponse = {
       data: {
         choices: [
           {
-            text: "A completed code snippet"
+            message: {
+              content: "```typescript\nfunction addNumbers(a: number, b: number): number {\n  return a + b;\n}\n```"
+            }
           }
         ]
       }
     };
 
     const mockCreateCompletion = jest.fn().mockResolvedValue(mockCompletionResponse);
-    const mockOpenai = { createCompletion: mockCreateCompletion };
+    const mockOpenai = { createChatCompletion: mockCreateCompletion };
     const mockConfigureOpenAI = jest.fn().mockReturnValue(mockOpenai);
 
     beforeEach(() => {
       jest.clearAllMocks();
     });
 
-    it("should return the original 'selectedText' when the OpenAI API response is empty", async () => {
-      const devBuddy = new DevBuddy("openai-api-key", mockConfigureOpenAI);
-      mockCreateCompletion.mockResolvedValueOnce({
-        data: {
-          choices: [
-            {
-              text: ""
-            }
-          ]
-        }
-      });
+    it("completes the comments in the given code", async () => {
+      const openaiApiKey = "your-api-key-here";
+      const devBuddy = new DevBuddy(openaiApiKey, mockConfigureOpenAI);
 
-      const result = await devBuddy.completeComments("Some code with TODO and FIXME comments", "javascript");
+      const selectedText = `function addNumbers(a: number, b: number): number {
+        // TODO: Implement this function
+      }`;
 
-      expect(result).toBe("Some code with TODO and FIXME comments");
-      expect(mockCreateCompletion).toHaveBeenCalledTimes(1);
+      const expectedText = "function addNumbers(a: number, b: number): number {\n  return a + b;\n}";
+
+      const newText = await devBuddy.completeComments(selectedText, "typescript");
+
+      expect(newText).toEqual(expectedText);
     });
 
-    it("should return the original 'selectedText' when the OpenAI API response is whitespace", async () => {
-      const devBuddy = new DevBuddy("openai-api-key", mockConfigureOpenAI);
-      mockCreateCompletion.mockResolvedValueOnce({
-        data: {
-          choices: [
-            {
-              text: "  \n\n   \n"
-            }
-          ]
-        }
-      });
-
-      const result = await devBuddy.completeComments("Some code with TODO and FIXME comments", "javascript");
-
-      expect(result).toBe("Some code with TODO and FIXME comments");
-      expect(mockCreateCompletion).toHaveBeenCalledTimes(1);
-    });
-
-    it("should throw an error when an error occurs while calling the OpenAI API", async () => {
+    it("throws an error when an error occurs while calling the OpenAI API", async () => {
       const devBuddy = new DevBuddy("openai-api-key", mockConfigureOpenAI);
       mockCreateCompletion.mockRejectedValueOnce(new Error("API Error"));
 

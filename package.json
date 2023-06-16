@@ -48,7 +48,7 @@
     "typescript": "^5.0.4"
   },
   "dependencies": {
-    "openai": "^3.2.0"
+    "openai": "^3.3.0"
   },
   "license": "MIT",
   "jest": {
